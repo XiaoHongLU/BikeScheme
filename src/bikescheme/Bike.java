@@ -1,12 +1,12 @@
 package bikescheme;
 
 /**
- * @author KAY
+ * @author Keqi & Jinhong
  *
  */
 public class Bike {
-private String ID;
-private boolean rentStatus;
+	private String ID;
+	private boolean rentStatus;
 
 	public Bike(String bikeID) {
 		this.ID = bikeID;

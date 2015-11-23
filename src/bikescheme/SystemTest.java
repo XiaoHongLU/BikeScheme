@@ -40,6 +40,7 @@ public class SystemTest {
      */
     
     
+    
     /**
      * 
      * Setup demonstration system configuration:
@@ -130,6 +131,9 @@ public class SystemTest {
         input ("2 09:30, KeyReader, B.2.kr, insertKey, key-2");
         expect("2 09:30, OKLight,   B.2.ok, flashed");
     }
+    
+    //@Test
+    //public void 
     
     
     /*

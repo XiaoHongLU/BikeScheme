@@ -4,12 +4,12 @@ public class User {
 
 	private String name;
 	private String keyNumber;
-	private String card;
+	private String card1;
 	
 	public User(String name, String keyNumber,String card) {
 		this.name = name;
 		this.keyNumber = keyNumber;
-		this.card = card;
+		this.card1 = card;
 	}
 	public String getName() {
 		return name;

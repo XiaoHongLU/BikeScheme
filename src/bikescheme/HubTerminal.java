@@ -68,5 +68,7 @@ public class HubTerminal extends AbstractIODevice {
     // Insert here support for operations generating output on the 
     // touch screen display.
     
+    
+    
    
 }

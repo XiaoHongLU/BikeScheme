@@ -12,11 +12,13 @@ import java.util.logging.Logger;
  * @author pbj
  *
  */
-public class DPoint implements KeyInsertionObserver {
+public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
     public static final Logger logger = Logger.getLogger("bikescheme");
 
     private KeyReader keyReader; 
     private OKLight okLight;
+    private BikeSensor bikeSensor;
+    private BikeLock bikeLock;
     private String instanceName;
     private int index;
  
@@ -36,17 +38,22 @@ public class DPoint implements KeyInsertionObserver {
         keyReader = new KeyReader(instanceName + ".kr");
         keyReader.setObserver(this);
         okLight = new OKLight(instanceName + ".ok");
+        bikeSensor = new BikeSensor(instanceName + ".bs");
+        bikeLock = new BikeLock (instanceName + ".bl");
+        
+        
         this.instanceName = instanceName;
         this.index = index;
     }
        
     public void setDistributor(EventDistributor d) {
+        bikeSensor.addDistributorLinks(d);
         keyReader.addDistributorLinks(d); 
     }
     
     public void setCollector(EventCollector c) {
+        bikeLock.setCollector(c);
         okLight.setCollector(c);
-        
     }
     
     public String getInstanceName() {
@@ -57,14 +64,22 @@ public class DPoint implements KeyInsertionObserver {
     }
     
     /** 
-     * Dummy implementation of docking point functionality on key insertion.
+     * Implementation of docking point functionality on key insertion.
      * 
-     * Here, just flash the OK light.
+     * Key Insertion triggers unlocking the bike and flashes the light.
      */
     public void keyInserted(String keyId) {
         logger.fine(getInstanceName());
-        
+        bikeLock.unlock();
         okLight.flash();       
+    }
+    /**
+     * Hello
+     */
+    public void bikeDocked(String bikeID){
+        logger.fine(getInstanceName());
+        okLight.flash();
+        bikeLock.lock();
     }
     
  

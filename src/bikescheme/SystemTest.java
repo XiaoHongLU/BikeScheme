@@ -58,11 +58,18 @@ public class SystemTest {
      *         same test class.
      * 
      */
-    public void setupDemoSystemConfig() {
-        input("1 07:00, HubTerminal, ht, addDStation, A,   0,   0, 5");
-        input("1 07:00, HubTerminal, ht, addDStation, B, 400, 300, 3");
+    public void setupSystemConfig() {
+        input("1 07:00, HubTerminal, ht, addDStation, A,   0,   0, 10");
+        input("1 07:00, HubTerminal, ht, addDStation, B, 400, 300, 10");
     }
-
+    
+    public void setupBikes() {
+        input("2 09:00, BikeSensor, A.2.bs, dockBike, bike-2");
+        input("2 09:00, BikeSensor, A.3.bs, dockBike, bike-3");
+        input("2 09:00, BikeSensor, A.4.bs, dockBike, bike-4");
+        input("2 09:00, BikeSensor, B.2.bs, dockBike, bike-5");
+        input("2 09:00, BikeSensor, C.1.bs, dockBike, bike-6");
+    }
     /**
      * Run the "Register User" use case.
      * 
@@ -71,7 +78,7 @@ public class SystemTest {
     public void registerUser() {
         logger.info("Starting test: registerUser");
 
-        setupDemoSystemConfig();
+        setupSystemConfig();
 
         // Set up input and expected output.
         // Interleave input and expected output events so that sequence
@@ -97,7 +104,7 @@ public class SystemTest {
     public void showHighLowOccupancy() {
         logger.info("Starting test: showHighLowOccupancy");
 
-        setupDemoSystemConfig();
+        setupSystemConfig();
 
         input("2 08:00, Clock, clk, tick");
         input("2 08:01, Clock, clk, tick");
@@ -107,14 +114,45 @@ public class SystemTest {
                 + "     A,  100,   200,   HIGH,        19,       20,"
                 + "     B,  300,  -500,    LOW,         1,       50");
     }
+    
+    /**
+     * Run the "Add Docking Station" use case.
+     */
     @Test
     public void addDStation() {
+        logger.info("Starting test: addStation");
         
+        
+        setupSystemConfig();
+        
+        input("3 07:00, HubTerminal, ht, addDStation, C,   200,   300, 10");
+        input("3 07:00, HubTerminal, ht, addDStation, D,   100,   200, 10");
     }
     
+
+    /**
+     * Run the "Add Bike" use case.
+     * 
+     */
+    @Test
+    public void addBike() {
+        logger.info("Starting test: addBike");
+        
+        setupSystemConfig();
+        logger.info("addBike");
+        
+        input("2 09:00, BikeSensor, A.1.bs, dockBike, key-2");
+
+    }
+
     @Test
     public void viewOccupancy() {
+        logger.info("Starting test: viewOccupancy");
         
+        setupSystemConfig();
+        logger.info("viewOccupancy");
+        
+        input("3 15:00, DSTouchScreen, A.ts, ");
     }
     
     /**
@@ -125,10 +163,11 @@ public class SystemTest {
     public void hireBike() {
         logger.info("Starting test: hireBike");
 
-        setupDemoSystemConfig();
+        setupSystemConfig();
 
         input("2 08:00, KeyReader, A.1.kr, insertKey, key-2");
-        expect("2 08:01, OKLight, A.1.ok, flashed");
+        expect("2 08:00, BikeLock, A.1.bl, unlocked");
+        expect("2 08:00, OKLight, A.1.ok, flashed");
     }
 
     /**
@@ -139,29 +178,18 @@ public class SystemTest {
     public void returnBike() {
         logger.info("Starting test: returnBike");
         
-        setupDemoSystemConfig();
+        setupSystemConfig();
+        setupBikes();
         
         input("2 09:00, BikeSensor, A.2.bs, dockBike, bike-2");
-        expect("2 09:01, BikeLock, A.2.bl, locked, bike-2");
-        expect("2 09:01, OKLight, A.2.ok, flashed");
+        expect("2 09:00, OKLight, A.2.ok, flashed");
+        expect("2 09:00, BikeLock, A.2.bl, locked");
   
     }
 
     /**
-     * Run the "Add Bike" use case.
-     * 
-     */
-    @Test
-    public void addBike() {
-        logger.info("Starting test: addBike");
-
-        input("2 09:00, BikeSensor, A.3.bs, dockBike, bike-10");
-        input("2 09:01, BikeSensor, A.4.bs, dockBike, bike-11");
-    }
-
-    /**
      * Run the "Remove Bike" use case.
-     * 
+     * Supplement
      */
     @Test
     public void removeBike() {
@@ -175,6 +203,17 @@ public class SystemTest {
     @Test
     public void viewUserActivity() {
         logger.info("Starting test: viewUserActivity");
+        
+        setupSystemConfig();
+        logger.info("viewUserActivity");
+        
+        input("2 18:00, DSTouchScreen, A.ts, viewActivity");
+        expect("2 18:00, DSTouchScreen, A.ts, viewPrompt");
+        input("2 18:01, KeyReader, A.kr, insertKey, key-2");
+        expect("2 18:01, DSTouchScreen, A.ts, viewActivity, ordered-tuples, 4,"
+                + "HireTime, HireDS, ReturnDS,  Duration (min)"
+                + "   08:00,      A,        A,           80" );
+       
     }
 
     /**
@@ -185,7 +224,7 @@ public class SystemTest {
     public void testKeyReaderAndOKLight() {
         logger.info("Starting test: testKeyReaderAndOKLight");
 
-        setupDemoSystemConfig();
+        setupSystemConfig();
 
         input("2 09:30, KeyReader, B.2.kr, insertKey, key-2");
         expect("2 09:30, OKLight,   B.2.ok, flashed");

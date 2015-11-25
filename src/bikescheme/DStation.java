@@ -4,6 +4,7 @@
 package bikescheme;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -25,6 +26,7 @@ public class DStation implements StartRegObserver {
     private CardReader cardReader; 
     private KeyIssuer keyIssuer;
     private List<DPoint> dockingPoints;
+    private KeyReader keyReader;
  
     /**
      * 
@@ -56,6 +58,8 @@ public class DStation implements StartRegObserver {
         
         keyIssuer = new KeyIssuer(instanceName + ".ki");
         
+        keyReader = new KeyReader(instanceName + ".kr");
+        
         dockingPoints = new ArrayList<DPoint>();
         
         for (int i = 1; i <= numPoints; i++) {
@@ -67,6 +71,7 @@ public class DStation implements StartRegObserver {
     void setDistributor(EventDistributor d) {
         touchScreen.addDistributorLinks(d); 
         cardReader.addDistributorLinks(d);
+        keyReader.addDistributorLinks(d);
         for (DPoint dp : dockingPoints) {
             dp.setDistributor(d);
         }
@@ -100,6 +105,18 @@ public class DStation implements StartRegObserver {
         logger.fine("At position 2 on instance " + getInstanceName());
         
         keyIssuer.issueKey(); // Generate output event
+        
+    }
+    
+    public void viewActivityReceived(String keyID){
+        logger.fine("JINHONGLU"+getInstanceName());
+        String[] userInfoArray = 
+                // "HireTime"  "HireDS" "ReturnDS" "RentTime"
+            {  "08:00",      "A",  "A",  "80"};
+
+        List<String> userInfoData = Arrays.asList(userInfoArray);
+        touchScreen.showUserActivity(userInfoData);;
+        
     }
     
     public String getInstanceName() {

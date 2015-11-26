@@ -21,10 +21,12 @@ public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
     private BikeLock bikeLock;
     private String instanceName;
     private int index;
+    private String stationName;
     //This status indicates if it is occupied;
     private boolean occupiedStatus;
     private BikeReturnObserver returnObserver;
     private BikeRentObserver rentObserver;
+    private String bikeID;
  
     /**
      * 
@@ -35,6 +37,7 @@ public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
      * @param index of reference to this docking point  in owning DStation's
      *  list of its docking points.
      */
+    
     public DPoint(String instanceName, int index) {
 
      // Construct and make connections with interface devices
@@ -51,7 +54,11 @@ public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
         this.instanceName = instanceName;
         this.index = index;
     }
-       
+     //q23  
+    public void setDSName(String s){
+        this.stationName = s;
+    }
+    
     public void setDistributor(EventDistributor d) {
         bikeSensor.addDistributorLinks(d);
         keyReader.addDistributorLinks(d); 
@@ -84,7 +91,9 @@ public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
     public void keyInserted(String keyId) {
         logger.fine(getInstanceName());
         bikeLock.unlock();
-        okLight.flash();       
+        okLight.flash();
+        logger.fine("123");
+        rentObserver.bikeRent(keyId, bikeID, stationName, index);
     }
     
     /**
@@ -94,7 +103,8 @@ public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
         logger.fine(getInstanceName());
         okLight.flash();
         bikeLock.lock();
-        
+        this.bikeID = bikeID;
+        returnObserver.bikeReturn(bikeID, stationName, index);
     }
     
     /**

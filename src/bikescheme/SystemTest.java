@@ -69,10 +69,8 @@ public class SystemTest {
     }
     
     public void setupBikes() {
-        input("2 09:00, BikeSensor, A.2.bs, dockBike, bike-2");
-        input("2 09:00, BikeSensor, A.3.bs, dockBike, bike-3");
-        input("2 09:00, BikeSensor, A.4.bs, dockBike, bike-4");
-        input("2 09:00, BikeSensor, B.2.bs, dockBike, bike-5");
+        input("1 08:00, BikeSensor, A.2.bs, dockBike, bike-2");
+        input("1 08:00, BikeSensor, B.2.bs, dockBike, bike-3");
     }
     /**
      * Run the "Register User" use case.
@@ -109,8 +107,9 @@ public class SystemTest {
         logger.info("Starting test: showHighLowOccupancy");
 
         setupSystemConfig();
-
-        input("2 08:00, Clock, clk, tick");
+        setupBikes();
+        returnBike();
+        input("2 18:00, Clock, clk, tick");
         expect("2 08:00, HubDisplay, hd, viewOccupancy, unordered-tuples, 6,"
                 + "DSName, East, North, Status, #Occupied, #DPoints,"
                 + "     A,  100,   200,   HIGH,        19,       20,"
@@ -144,6 +143,8 @@ public class SystemTest {
         logger.info("addBike");
         
         input("2 09:00, BikeSensor, A.1.bs, dockBike, bike-15");
+        expect("2 09:00,   OKLight, A.1.ok, flashed");
+        expect("2 09:00,   BikeLock,A.1.bl,locked");
 
     }
 
@@ -166,10 +167,11 @@ public class SystemTest {
         logger.info("Starting test: hireBike");
 
         setupSystemConfig();
+        setupBikes();
 
-        input("2 08:00, KeyReader, A.1.kr, insertKey, key-2");
-        expect("2 08:00, BikeLock, A.1.bl, unlocked");
-        expect("2 08:00, OKLight, A.1.ok, flashed");
+        input("2 08:00, KeyReader, A.2.kr, insertKey, key-2");
+        expect("2 08:00, BikeLock, A.2.bl, unlocked");
+        expect("2 08:00, OKLight, A.2.ok, flashed");
     }
 
     /**
@@ -181,6 +183,7 @@ public class SystemTest {
         logger.info("Starting test: returnBike");
         
         setupSystemConfig();
+        setupBikes();
         
         input("2 09:00, BikeSensor, A.2.bs, dockBike, bike-2");
         expect("2 09:00, OKLight, A.2.ok, flashed");

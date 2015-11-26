@@ -21,6 +21,10 @@ public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
     private BikeLock bikeLock;
     private String instanceName;
     private int index;
+    //This status indicates if it is occupied;
+    private boolean occupiedStatus;
+    private BikeReturnObserver returnObserver;
+    private BikeRentObserver rentObserver;
  
     /**
      * 
@@ -38,9 +42,11 @@ public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
         keyReader = new KeyReader(instanceName + ".kr");
         keyReader.setObserver(this);
         okLight = new OKLight(instanceName + ".ok");
+        // NEW PARAMETERS
         bikeSensor = new BikeSensor(instanceName + ".bs");
+        bikeSensor.setObserver(this);
         bikeLock = new BikeLock (instanceName + ".bl");
-        
+        occupiedStatus = false;
         
         this.instanceName = instanceName;
         this.index = index;
@@ -63,6 +69,13 @@ public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
         return index;
     }
     
+    public void setReturnObserver (BikeReturnObserver o) {
+        returnObserver = o;
+    }
+    
+    public void setRentObserver (BikeRentObserver o) {
+        rentObserver = o;
+    }
     /** 
      * Implementation of docking point functionality on key insertion.
      * 
@@ -73,6 +86,7 @@ public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
         bikeLock.unlock();
         okLight.flash();       
     }
+    
     /**
      * Hello
      */
@@ -80,8 +94,24 @@ public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
         logger.fine(getInstanceName());
         okLight.flash();
         bikeLock.lock();
+        
     }
     
+    /**
+     * Occupy()
+     */
+    public void occupy(){
+        if (this.occupiedStatus == false)
+            this.occupiedStatus = true;
+        else { System.out.println("WARNING: ALREADY OCCUPIED.");};
+    }
+    /**
+     * If occupied return True else return False.
+     * 
+     */
+    public boolean isOccupied(){
+        return this.occupiedStatus;
+    }
  
 
 }

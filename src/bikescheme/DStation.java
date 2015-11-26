@@ -130,6 +130,29 @@ public class DStation implements StartRegObserver {
     public int getNorthPos() {
         return northPos;
     }
+    
+    //Return number of DPoints Modified
+    public int getNoDPoints(){
+        return dockingPoints.size();
+    }
+    
+    //Return number of occupied DPoints Modified
+    public int getOccupiedDPoints(){
+        int occupiedNumber = 0;
+        for (DPoint p : dockingPoints){
+            if (p.isOccupied()) occupiedNumber++;
+        }
+        
+        return occupiedNumber;
+    }
+    
+    public void setPointsObserver(BikeRentObserver a, BikeReturnObserver o){
+        for (DPoint p : dockingPoints){
+            p.setRentObserver(a);
+            p.setReturnObserver(o);
+        }
+    }
+    
  
 
 }

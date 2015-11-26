@@ -28,6 +28,8 @@ public class HubTerminal extends AbstractIODevice {
         observer = o;
     }
     
+
+    
     /** 
      *    Select device action based on input event message
      *    

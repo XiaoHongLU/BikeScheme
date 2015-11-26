@@ -25,12 +25,12 @@ import org.junit.Test;
 public class SystemTest {
     private static final String LS = System.getProperty("line.separator");
     private static Logger logger;
-    
+
     private EventDistributor distributor;
     private EventCollector collector;
-    
+
     private List<Event> expectedOutputEvents;
-    
+
     /*
      * 
      * INSERT SYSTEM TESTS HERE
@@ -38,104 +38,200 @@ public class SystemTest {
      * 
      * 
      */
-    
-    
-    
+
+
     /**
      * 
      * Setup demonstration system configuration:
      * 
-     * Clock clk ----------------->
-     * HubTerminal ht <-----------> Hub  -------->   HubDisplay d
-     *                              |   
-     *                              |   
-     *                              |   
-     *                              v
-     * DSTouchScreen x.ts <---->  
-     * CardReader x.cr <------->  DStation x   -------> KeyIssuer x.ki
-     *                          |  x in {A,B}
-     *                          |
-     *                          |
-     *                          v
-     * KeyReader x.k.kr ---> DPoint x.k    ------> OKLight x.k.ok
-     *                       for x.k in {A.1 ... A.5,
-     *                                   B.1 ... B.3}
-     *  
-     *  This configuration is used in all the demonstration tests.
-     *  
-     *  It is inserted explicitly into each @Test block rather than the 
-     *  @Before block so that alternate configurations can also be set up
-     *  in this same test class.
-     *   
+     * Clock clk -----------------> HubTerminal ht <-----------> Hub -------->
+     * HubDisplay d | | | v DSTouchScreen x.ts <----> CardReader x.cr <------->
+     * DStation x -------> KeyIssuer x.ki | x in {A,B} | | v KeyReader x.k.kr
+     * ---> DPoint x.k ------> OKLight x.k.ok BikeSensor x.k.bs for x.k in {A.1
+     * ... A.5, B.1 ... B.3}
+     * 
+     * This configuration is used in all the demonstration tests.
+     * 
+     * It is inserted explicitly into each @Test block rather than the
+     * 
+     * @Before block so that alternate configurations can also be set up in this
+     *         same test class.
+     * 
      */
-    public void setupDemoSystemConfig() {
-        input("1 07:00, HubTerminal, ht, addDStation, A,   0,   0, 5");
-        input("1 07:00, HubTerminal, ht, addDStation, B, 400, 300, 3");
+    public void setupSystemConfig() {
+        input("1 07:00, HubTerminal, ht, addDStation, A,   0,   0, 10");
+        input("1 07:00, HubTerminal, ht, addDStation, B, 400, 300, 10");
     }
-
+    
+    public void setupBikes() {
+        input("2 09:00, BikeSensor, A.2.bs, dockBike, bike-2");
+        input("2 09:00, BikeSensor, A.3.bs, dockBike, bike-3");
+        input("2 09:00, BikeSensor, A.4.bs, dockBike, bike-4");
+        input("2 09:00, BikeSensor, B.2.bs, dockBike, bike-5");
+        input("2 09:00, BikeSensor, C.1.bs, dockBike, bike-6");
+    }
     /**
-     *  Run the "Register User" use case.
+     * Run the "Register User" use case.
      * 
      */
     @Test
     public void registerUser() {
         logger.info("Starting test: registerUser");
 
-        setupDemoSystemConfig();
-        
+        setupSystemConfig();
+
         // Set up input and expected output.
-        // Interleave input and expected output events so that sequence 
+        // Interleave input and expected output events so that sequence
         // matches that when describing the use case main success scenario.
         logger.info("registerUser");
-        
-        input ("2 08:00, DSTouchScreen, A.ts, startReg, Alice");
+
+        input("2 08:00, DSTouchScreen, A.ts, startReg, Alice");
         expect("2 08:00, CardReader, A.cr, enterCardAndPin");
-        input ("2 08:01, CardReader, A.cr, checkCard, Alice-card-auth");
+        input("2 08:01, CardReader, A.cr, checkCard, Alice-card-auth");
         expect("2 08:01, KeyIssuer, A.ki, keyIssued, A.ki-1");
-        
+
     }
+
     /**
-     *  Run a show high/low occupancy test.
-     *  
-     *  Display event is scheduled to run only when minutes is multiple of 5,
-     *  so only one of the input events should trigger the display. 
+     * Run a show high/low occupancy test.
+     * 
+     * Display event is scheduled to run only when minutes is multiple of 5, so
+     * only one of the input events should trigger the display.
      * 
      */
-        
-    @Test 
+
+    @Test
     public void showHighLowOccupancy() {
         logger.info("Starting test: showHighLowOccupancy");
-        
-        setupDemoSystemConfig();
 
-        input ("2 08:00, Clock, clk, tick");
-        input ("2 08:01, Clock, clk, tick");
-        input ("2 08:02, Clock, clk, tick");
+        setupSystemConfig();
+
+        input("2 08:00, Clock, clk, tick");
+        input("2 08:01, Clock, clk, tick");
+        input("2 08:02, Clock, clk, tick");
         expect("2 08:00, HubDisplay, hd, viewOccupancy, unordered-tuples, 6,"
-             + "DSName, East, North, Status, #Occupied, #DPoints,"
-             + "     A,  100,   200,   HIGH,        19,       20," 
-             + "     B,  300,  -500,    LOW,         1,       50");
+                + "DSName, East, North, Status, #Occupied, #DPoints,"
+                + "     A,  100,   200,   HIGH,        19,       20,"
+                + "     B,  300,  -500,    LOW,         1,       50");
     }
     
     /**
-     * Run a test to demonstrate basic docking point interface
-     * functionality.
+     * Run the "Add Docking Station" use case.
+     */
+    @Test
+    public void addDStation() {
+        logger.info("Starting test: addStation");
+        
+        
+        setupSystemConfig();
+        
+        input("3 07:00, HubTerminal, ht, addDStation, C,   200,   300, 10");
+        input("3 07:00, HubTerminal, ht, addDStation, D,   100,   200, 10");
+    }
+    
+
+    /**
+     * Run the "Add Bike" use case.
+     * 
+     */
+    @Test
+    public void addBike() {
+        logger.info("Starting test: addBike");
+        
+        setupSystemConfig();
+        logger.info("addBike");
+        
+        input("2 09:00, BikeSensor, A.1.bs, dockBike, key-2");
+
+    }
+
+    @Test
+    public void viewOccupancy() {
+        logger.info("Starting test: viewOccupancy");
+        
+        setupSystemConfig();
+        logger.info("viewOccupancy");
+        
+        input("3 15:00, DSTouchScreen, A.ts, ");
+    }
+    
+    /**
+     * Run the "Hire Bike" use case.
+     * 
+     */
+    @Test
+    public void hireBike() {
+        logger.info("Starting test: hireBike");
+
+        setupSystemConfig();
+
+        input("2 08:00, KeyReader, A.1.kr, insertKey, key-2");
+        expect("2 08:00, BikeLock, A.1.bl, unlocked");
+        expect("2 08:00, OKLight, A.1.ok, flashed");
+    }
+
+    /**
+     * Run the "Return Bike" use case.
+     * 
+     */
+    @Test
+    public void returnBike() {
+        logger.info("Starting test: returnBike");
+        
+        setupSystemConfig();
+        setupBikes();
+        
+        input("2 09:00, BikeSensor, A.2.bs, dockBike, bike-2");
+        expect("2 09:00, OKLight, A.2.ok, flashed");
+        expect("2 09:00, BikeLock, A.2.bl, locked");
+  
+    }
+
+    /**
+     * Run the "Remove Bike" use case.
+     * Supplement
+     */
+    @Test
+    public void removeBike() {
+        logger.info("Starting test: removeBike");
+    }
+
+    /**
+     * Run the "View User Activity" use case.
+     * 
+     */
+    @Test
+    public void viewUserActivity() {
+        logger.info("Starting test: viewUserActivity");
+        
+        setupSystemConfig();
+        logger.info("viewUserActivity");
+        
+        input("2 18:00, DSTouchScreen, A.ts, viewActivity");
+        expect("2 18:00, DSTouchScreen, A.ts, viewPrompt");
+        input("2 18:01, KeyReader, A.kr, insertKey, key-2");
+        expect("2 18:01, DSTouchScreen, A.ts, viewActivity, ordered-tuples, 4,"
+                + "HireTime, HireDS, ReturnDS,  Duration (min)"
+                + "   08:00,      A,        A,           80" );
+       
+    }
+
+    /**
+     * Run a test to demonstrate basic docking point interface functionality.
      * 
      */
     @Test
     public void testKeyReaderAndOKLight() {
         logger.info("Starting test: testKeyReaderAndOKLight");
-        
-        setupDemoSystemConfig();
-        
-        input ("2 09:30, KeyReader, B.2.kr, insertKey, key-2");
+
+        setupSystemConfig();
+
+        input("2 09:30, KeyReader, B.2.kr, insertKey, key-2");
         expect("2 09:30, OKLight,   B.2.ok, flashed");
     }
-    
-    //@Test
-    //public void 
-    
-    
+
+
+
     /*
      * 
      * SUPPORT CODE FOR RUNNING TESTS
@@ -144,7 +240,7 @@ public class SystemTest {
      * 
      * 
      */
-     
+
     /**
      * Utility method for specifying an input event to drive in.
      * 
@@ -155,122 +251,119 @@ public class SystemTest {
     private void input(String inputEventString) {
         distributor.enqueue(new Event(inputEventString));
     }
-    
+
     /**
      * Utility method for specifying an expected output event.
      * 
      * For use in test methods in this class.
      * 
-     * Relies on test object field expectedOutputEvents for passing
-     * argument output event to checking method. 
+     * Relies on test object field expectedOutputEvents for passing argument
+     * output event to checking method.
      * 
      * @param outputEventString
      */
     private void expect(String outputEventString) {
         expectedOutputEvents.add(new Event(outputEventString));
     }
-    
-    
+
     /**
      * Queue up input events at event distributor.
      * 
-     * Intended for calling from other classes, when input events are
-     * read from a file, for example.
+     * Intended for calling from other classes, when input events are read from
+     * a file, for example.
      * 
-     * @param es input events
+     * @param es
+     *            input events
      */
     public void enqueueInputEvents(List<Event> es) {
         for (Event e : es) {
             distributor.enqueue(e);
         }
     }
-    
-    
+
     /**
-     * Set expected output events.  These are compared with actual 
-     * output events after a test is run.
+     * Set expected output events. These are compared with actual output events
+     * after a test is run.
      * 
-     * Intended for calling from other classes, when input events are
-     * read from a file, for example.
+     * Intended for calling from other classes, when input events are read from
+     * a file, for example.
      *
-     * @param es expected output events
+     * @param es
+     *            expected output events
      */
     public void setExpectedOutputEvents(List<Event> es) {
         expectedOutputEvents = es;
     }
-    
-    
+
     /**
-     * Initialise logging framework so all log records FINER and above
-     * are reported.
+     * Initialise logging framework so all log records FINER and above are
+     * reported.
      * 
      */
     @BeforeClass
     public static void setupLogger() {
-         
+
         // Enable log record filtering at FINER level.
-        logger = Logger.getLogger("bikescheme"); 
+        logger = Logger.getLogger("bikescheme");
         logger.setLevel(Level.FINER);
-        
+
         Logger rootLogger = Logger.getLogger("");
         Handler handler = rootLogger.getHandlers()[0];
         handler.setLevel(Level.FINER);
     }
-    
+
     /**
      * Setup test environment and starting system configuration.
      * 
-     * Starting system configuration consists of a Hub object and
-     * no Docking Station objects.
+     * Starting system configuration consists of a Hub object and no Docking
+     * Station objects.
      * 
      * Suitable for calling directly as well as from JUnit.
      */
     @Before
     public void setupTestEnvAndSystem() {
-       
+
         // Initialise core event framework objects
-        
+
         distributor = new EventDistributor();
-        collector = new EventCollector(); 
-        
+        collector = new EventCollector();
+
         // Create a hub object with interface devices.
-        
-                Hub hub = new Hub();
-                
+
+        Hub hub = new Hub();
+
         // Connect up hub interface devices to event framework
-                
+
         hub.setDistributor(distributor);
         hub.setCollector(collector);
-         
+
         // Initialise expected output
-        
+
         expectedOutputEvents = new ArrayList<Event>();
     }
-    
-   
-     /**
-     * Run test and check results. 
+
+    /**
+     * Run test and check results.
      * 
-     * Run this after input events have been loaded into event queue in 
-     * event distributor and expected output events have been loaded into
+     * Run this after input events have been loaded into event queue in event
+     * distributor and expected output events have been loaded into
      * expectedOutputEvents field of object this.
      * 
-     * If called directly, not via JUnit runner, the AssertionError, thrown
-     * when some assertion fails, should be caught.
-     */ 
+     * If called directly, not via JUnit runner, the AssertionError, thrown when
+     * some assertion fails, should be caught.
+     */
     @After
     public void runAndCheck() {
         List<Event> actualOutputEvents = runTestAndReturnResults();
         checkTestResults(expectedOutputEvents, actualOutputEvents);
-    } 
-    
-    
+    }
+
     /**
      * Inject input events in distributor queue into system and return the
      * resulting output events.
      * 
-     * This method can called directly as an alternative to runAndCheck
-     * if results want to be seen, but not checked.
+     * This method can called directly as an alternative to runAndCheck if
+     * results want to be seen, but not checked.
      * 
      * @return Output events from test run
      */
@@ -280,25 +373,24 @@ public class SystemTest {
         List<Event> actualOutputEvents = collector.fetchEvents();
         return actualOutputEvents;
     }
-    
+
     /**
-     * Compare expected and actual output events.  
+     * Compare expected and actual output events.
      * 
-     * Uses Event.listEqual() to do the comparison.  This not the same as
-     * the normal list equality. 
+     * Uses Event.listEqual() to do the comparison. This not the same as the
+     * normal list equality.
      * 
      * @see Event
      * 
      * @param expectedEvents
      * @param actualEvents
      */
-    public void checkTestResults(
-            List<Event> expectedEvents,  // Avoid field name expectedOutputEvents
+    public void checkTestResults(List<Event> expectedEvents, // Avoid field name
+                                                             // expectedOutputEvents
             List<Event> actualEvents) {
-            
+
         // Log output event sequences for easy comparison when different.
 
-        
         StringBuilder sb = new StringBuilder();
         sb.append(LS);
         sb.append("Expected output events:");
@@ -314,9 +406,8 @@ public class SystemTest {
             sb.append(LS);
         }
         logger.info(sb.toString());
-        
-        assertTrue("Expected and actual output events differ",
-                Event.listEqual(expectedEvents, actualEvents));
-               
+
+        assertTrue("Expected and actual output events differ", Event.listEqual(expectedEvents, actualEvents));
+
     }
 }

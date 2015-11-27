@@ -26,9 +26,9 @@ public class Hub implements AddDStationObserver, BikeRentObserver, BikeReturnObs
     private Map<String, DStation> dockingStationMap;
     // Create a map that links user to a specific key <String keyID, User>
     private Map<String, User> keyToUserMap;
-    // Create a map that links a bike to a specific key <String bikeID, String keyID>
     private Map<String, String> bikeToKeyMap;
-    private ArrayList<Bike> bikes = new ArrayList<Bike>();
+    // Create a map that links a bike to a specific key <String bikeID, String keyID>
+    private Map<String, Bike> bikeMap;
 
     /**
      * 
@@ -47,11 +47,9 @@ public class Hub implements AddDStationObserver, BikeRentObserver, BikeReturnObs
         terminal.setObserver(this);
         display = new HubDisplay("hd");
         dockingStationMap = new HashMap<String, DStation>();
-
-        
-        for (DStation s : dockingStationMap.values()){
-            s.setPointsObserver(this, this);
-        }
+        bikeMap = new HashMap<String, Bike>();
+        bikeToKeyMap = new HashMap<String, String>();
+        keyToUserMap = new HashMap<String, User>();
         
         
         
@@ -130,6 +128,7 @@ public class Hub implements AddDStationObserver, BikeRentObserver, BikeReturnObs
 
         newDStation.setDistributor(d);
         newDStation.setCollector(c);
+        newDStation.setPointsObserver(this, this);
         
     }
     
@@ -138,9 +137,10 @@ public class Hub implements AddDStationObserver, BikeRentObserver, BikeReturnObs
      * @param bikeID
      */
     @Override
-    public void bikeRent(String bikeID, String DStationName, int DPointNo){
-        
-        
+    public void bikeRent(String keyID, String bikeID, String DStationName, int DPointNo){
+        logger.fine("");
+        bikeToKeyMap.put(bikeID, keyID);
+        bikeMap.get(bikeID).rentBike();
     }
     
     /**
@@ -148,7 +148,14 @@ public class Hub implements AddDStationObserver, BikeRentObserver, BikeReturnObs
      */
     @Override
     public void bikeReturn(String bikeID, String DStationName, int DPointNo){
-        
+        logger.fine("");
+        if (!this.bikeMap.containsKey(bikeID)) {
+            Bike newBike = new Bike(bikeID);
+            bikeMap.put(bikeID, newBike);
+        } else {
+            bikeMap.get(bikeID).returnBike();
+            bikeToKeyMap.remove(bikeID);
+        }
     }
 
     public DStation getDStation(String instanceName) {

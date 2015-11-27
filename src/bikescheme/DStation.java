@@ -64,6 +64,8 @@ public class DStation implements StartRegObserver {
         
         for (int i = 1; i <= numPoints; i++) {
             DPoint dp = new DPoint(instanceName + "." + i, i - 1);
+            //added
+            dp.setDSName(getInstanceName());
             dockingPoints.add(dp);
         }
     }

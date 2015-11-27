@@ -5,6 +5,7 @@ public class User {
 	private String userAccount;
 	private String keyNumber;
 	private String card;
+	private Trip[] trips;
 	
 	public User(String userAccount, String keyNumber, String card) {
 	    this.userAccount = userAccount;
@@ -28,6 +29,14 @@ public class User {
 	}
 	public void setCard(String card) {
 		this.card = card;
+	}
+	
+	public void startTrip(){
+	    
+	}
+	
+	public void endTrip(){
+	    
 	}
 	
 

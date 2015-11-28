@@ -70,7 +70,16 @@ public class SystemTest {
     
     public void setupBikes() {
         input("1 08:00, BikeSensor, A.2.bs, dockBike, bike-2");
-        input("1 08:00, BikeSensor, B.2.bs, dockBike, bike-3");
+        input("1 08:00, BikeSensor, A.3.bs, dockBike, bike-3");
+        input("1 08:00, BikeSensor, B.1.bs, dockBike, bike-4");
+        input("1 08:00, BikeSensor, B.2.bs, dockBike, bike-5");
+        input("1 08:00, BikeSensor, B.3.bs, dockBike, bike-6");
+        input("1 08:00, BikeSensor, B.4.bs, dockBike, bike-7");
+        input("1 08:00, BikeSensor, B.5.bs, dockBike, bike-8");
+        input("1 08:00, BikeSensor, B.6.bs, dockBike, bike-9");
+        input("1 08:00, BikeSensor, B.7.bs, dockBike, bike-10");
+        input("1 08:00, BikeSensor, B.8.bs, dockBike, bike-11");
+        input("1 08:00, BikeSensor, B.9.bs, dockBike, bike-12");
     }
     /**
      * Run the "Register User" use case.
@@ -106,14 +115,12 @@ public class SystemTest {
     public void showHighLowOccupancy() {
         logger.info("Starting test: showHighLowOccupancy");
 
-        setupSystemConfig();
-        setupBikes();
         returnBike();
         input("2 18:00, Clock, clk, tick");
-        expect("2 08:00, HubDisplay, hd, viewOccupancy, unordered-tuples, 6,"
+        expect("2 18:00, HubDisplay, hd, viewOccupancy, unordered-tuples, 6,"
                 + "DSName, East, North, Status, #Occupied, #DPoints,"
-                + "     A,  100,   200,   HIGH,        19,       20,"
-                + "     B,  300,  -500,    LOW,         1,       50");
+                + "     A,    0,     0,       ,         2,       10,"
+                + "     B,  400,   300,   HIGH,         9,       10");
     }
     
     /**
@@ -143,19 +150,42 @@ public class SystemTest {
         logger.info("addBike");
         
         input("2 09:00, BikeSensor, A.1.bs, dockBike, bike-15");
-        expect("2 09:00,   OKLight, A.1.ok, flashed");
-        expect("2 09:00,   BikeLock,A.1.bl,locked");
-
     }
-
+    
+    /**
+     * Run the "Find Free Points" use case.
+     * 
+     */
     @Test
-    public void viewOccupancy() {
-        logger.info("Starting test: viewOccupancy");
+    public void findFreePoints() {
+        logger.info("Starting test: findFreePoints");
         
         setupSystemConfig();
-        logger.info("viewOccupancy");
+        setupBikes();
+        logger.info("findFreePoints");
         
-        input("3 15:00, DSTouchScreen, A.ts, ");
+        input("3 15:00, DSTouchScreen, B.ts, findFreePoints");
+        expect("3 15:00, DSTouchScreen, B.ts, findFreePoints, unordered-tuples, 6,"
+                + "DSName, East, North, Status, #Occupied, #DPoints,"
+                + "     A, -400,  -300,       ,         2,       10,"
+                + "     B,    0,     0,   HIGH,         9,       10");
+    }
+    
+    /**
+     * Run the "Remove bike" use case.
+     * 
+     */
+    @Test
+    public void removeBike() {
+        logger.info("Starting test: removeBike");
+        
+        setupSystemConfig();
+        setupBikes();
+        logger.info("removeBikes");
+        
+        input("3 15:00, KeyReader, A.3.kr, insertKey, admin");
+        expect("3 15:00, BikeLock, A.3.bl, unlocked");
+        expect("3 15:00, OKLight, A.3.ok, flashed");
     }
     
     /**
@@ -166,10 +196,10 @@ public class SystemTest {
     public void hireBike() {
         logger.info("Starting test: hireBike");
 
-        setupSystemConfig();
+        registerUser();
         setupBikes();
-
-        input("2 08:00, KeyReader, A.2.kr, insertKey, key-2");
+        
+        input("2 08:00, KeyReader, A.2.kr, insertKey, A.ki-1");
         expect("2 08:00, BikeLock, A.2.bl, unlocked");
         expect("2 08:00, OKLight, A.2.ok, flashed");
     }
@@ -182,8 +212,7 @@ public class SystemTest {
     public void returnBike() {
         logger.info("Starting test: returnBike");
         
-        setupSystemConfig();
-        setupBikes();
+        hireBike();
         
         input("2 09:00, BikeSensor, A.2.bs, dockBike, bike-2");
         expect("2 09:00, OKLight, A.2.ok, flashed");
@@ -191,14 +220,6 @@ public class SystemTest {
   
     }
 
-    /**
-     * Run the "Remove Bike" use case.
-     * Supplement
-     */
-    @Test
-    public void removeBike() {
-        logger.info("Starting test: removeBike");
-    }
 
     /**
      * Run the "View User Activity" use case.
@@ -208,20 +229,51 @@ public class SystemTest {
     public void viewUserActivity() {
         logger.info("Starting test: viewUserActivity");
         
-        setupSystemConfig();
+        returnBike();
+        
         logger.info("viewUserActivity");
         
         input("2 18:00, DSTouchScreen, A.ts, viewActivity");
-        expect("2 18:00, DSTouchScreen, A.ts, viewPrompt");
-        input("2 18:01, KeyReader, A.kr, insertKey, key-2");
-        expect("2 18:01, DSTouchScreen, A.ts, viewActivity, ordered-tuples, 4,"
-                + "HireTime, HireDS, ReturnDS,  Duration (min)"
-                + "   08:00,      A,        A,           80" );
+        expect("2 18:00, DSTouchScreen, A.ts, viewPrompt, PLEASE INSERT YOUR KEY.");
+        input("2 18:01, KeyReader, A.kr, keyInsertion, A.ki-1");
+        expect("2 18:01, DSTouchScreen, A.ts, viewUserActivity, ordered-tuples, 4,"
+                + "HireTime, HireDS, ReturnDS,  Duration (min),"
+                + "   08:00,      A,        A,           60" );
        
     }
 
 
+    /**
+     * Run the "Report Fault" use case.
+     * 
+     */
+    @Test
+    public void reportFault() {
+        logger.info("Starting test: reportFault");
+        
+        returnBike();
+        
+        logger.info("reportFault");
+        
+        input("2 09:01, FaultButton, A.2.fb, pressed");
+        expect("2 09:01, FaultLight, A.2.fl, flashed");
+    }
 
+    /**
+     * Run the "View Stats" use case.
+     * 
+     */
+    @Test
+    public void viewStats() {
+        logger.info("Starting test: viewStats");
+        
+        reportFault();
+        
+        input("2 18:00, HubTerminal, ht, viewStats");
+        
+        
+    }
+    
     /*
      * 
      * SUPPORT CODE FOR RUNNING TESTS

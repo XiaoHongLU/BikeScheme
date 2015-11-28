@@ -1,16 +1,20 @@
 package bikescheme;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 public class User {
 
 	private String userAccount;
-	private String keyNumber;
+	private String keyID;
 	private String card;
-	private Trip[] trips;
+	private ArrayList<Trip> trips;
+	private Trip currentTrip;
 	
 	public User(String userAccount, String keyNumber, String card) {
 	    this.userAccount = userAccount;
-	    this.keyNumber = keyNumber;
+	    this.keyID = keyNumber;
 	    this.card = card;
+	    this.trips = new ArrayList<Trip>();
 	}
 	public String getUserAccount() {
 		return userAccount;
@@ -19,10 +23,10 @@ public class User {
 		this.userAccount = userAccount;
 	}
 	public String getKeyNumber() {
-		return keyNumber;
+		return keyID;
 	}
-	public void setKeyNumber(String keyNumber) {
-		this.keyNumber = keyNumber;
+	public void setKeyID(String keyID) {
+		this.keyID = keyID;
 	}
 	public String getCard() {
 		return card;
@@ -31,12 +35,25 @@ public class User {
 		this.card = card;
 	}
 	
-	public void startTrip(){
-	    
+	public void startTrip(String station){
+	    currentTrip = new Trip(station);
 	}
 	
-	public void endTrip(){
+	public void endTrip(String station){
+	    currentTrip.endTrip(station);
+	    trips.add(currentTrip);
+	}
+	
+	public ArrayList<Trip> getTrips(){
+	    ArrayList<Trip> todayTrips = new ArrayList<Trip>();
+	    for (Trip t: trips) {
+	        if (Clock.getInstance().getDateAndTimeAsCalendar().get(Calendar.DAY_OF_MONTH) 
+	                == t.getDay() ) {
+	            todayTrips.add(t);
+	        }
+	    }
 	    
+	    return todayTrips;
 	}
 	
 

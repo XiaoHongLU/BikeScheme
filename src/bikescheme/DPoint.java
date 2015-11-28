@@ -4,86 +4,92 @@
 package bikescheme;
 
 import java.util.logging.Logger;
+import java.util.Date;
 
 /**
- *  
+ * 
  * Docking Point for a Docking Station.
  * 
  * @author pbj
  *
  */
-public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
+public class DPoint implements KeyInsertionObserver, BikeDockingObserver, FaultButtonPressedObserver {
     public static final Logger logger = Logger.getLogger("bikescheme");
 
-    private KeyReader keyReader; 
+    private KeyReader keyReader;
     private OKLight okLight;
     private BikeSensor bikeSensor;
     private BikeLock bikeLock;
     private String instanceName;
     private int index;
-    private String stationName;
-    //This status indicates if it is occupied;
-    private boolean occupiedStatus;
-    private BikeReturnObserver returnObserver;
-    private BikeRentObserver rentObserver;
+    private boolean occupiedStatus;             // This status indicates if it is occupied;
     private String bikeID;
- 
+    private FaultButton faultButton;
+    private Date lastDocked;
+    private FaultLight faultLight;
+    
+    private HubInterface hub;
+    private DStationInterface station;
+
+
     /**
      * 
      * Construct a Docking Point object with a key reader and green ok light
      * interface devices.
      * 
-     * @param instanceName a globally unique name
-     * @param index of reference to this docking point  in owning DStation's
-     *  list of its docking points.
+     * @param instanceName
+     *            a globally unique name
+     * @param index
+     *            of reference to this docking point in owning DStation's list
+     *            of its docking points.
      */
-    
+
     public DPoint(String instanceName, int index) {
 
-     // Construct and make connections with interface devices
-        
+        // Construct and make connections with interface devices
+
         keyReader = new KeyReader(instanceName + ".kr");
         keyReader.setObserver(this);
         okLight = new OKLight(instanceName + ".ok");
         // NEW PARAMETERS
         bikeSensor = new BikeSensor(instanceName + ".bs");
         bikeSensor.setObserver(this);
-        bikeLock = new BikeLock (instanceName + ".bl");
+        bikeLock = new BikeLock(instanceName + ".bl");
         occupiedStatus = false;
-        
+        faultButton = new FaultButton(instanceName + ".fb");
+        faultButton.setObserver(this);
+        faultLight = new FaultLight(instanceName + ".fl");
+
         this.instanceName = instanceName;
         this.index = index;
     }
-     //q23  
-    public void setDSName(String s){
-        this.stationName = s;
-    }
-    
+
     public void setDistributor(EventDistributor d) {
         bikeSensor.addDistributorLinks(d);
-        keyReader.addDistributorLinks(d); 
+        keyReader.addDistributorLinks(d);
+        faultButton.addDistributorLinks(d);
     }
-    
+
     public void setCollector(EventCollector c) {
         bikeLock.setCollector(c);
         okLight.setCollector(c);
+        faultLight.setCollector(c);
     }
-    
+
     public String getInstanceName() {
         return instanceName;
     }
+
     public int getIndex() {
         return index;
     }
-    
-    public void setReturnObserver (BikeReturnObserver o) {
-        returnObserver = o;
+
+    public void setInterface(DStationInterface s, HubInterface h) {
+        this.station = s;
+        this.hub = h;
     }
     
-    public void setRentObserver (BikeRentObserver o) {
-        rentObserver = o;
-    }
-    /** 
+    /**
      * Implementation of docking point functionality on key insertion.
      * 
      * Key Insertion triggers unlocking the bike and flashes the light.
@@ -93,35 +99,52 @@ public class DPoint implements KeyInsertionObserver,BikeDockingObserver {
         bikeLock.unlock();
         okLight.flash();
         logger.fine("123");
-        rentObserver.bikeRent(keyId, bikeID, stationName, index);
+        hub.bikeTakeOut(keyId, bikeID, this);
+        this.occupiedStatus = false;
+
     }
-    
+
     /**
      * Hello
      */
-    public void bikeDocked(String bikeID){
+    public void bikeDocked(String bikeID) {
         logger.fine(getInstanceName());
-        okLight.flash();
-        bikeLock.lock();
+        if (hub.containsBike(bikeID)){
+            okLight.flash();
+            bikeLock.lock();
+        }
+        hub.bikeDocked(bikeID, this);
         this.bikeID = bikeID;
-        returnObserver.bikeReturn(bikeID, stationName, index);
+        this.occupiedStatus = true;
+        this.lastDocked = Clock.getInstance().getDateAndTime();
     }
+
     
     /**
-     * Occupy()
+     * 
      */
-    public void occupy(){
-        if (this.occupiedStatus == false)
-            this.occupiedStatus = true;
-        else { System.out.println("WARNING: ALREADY OCCUPIED.");};
+    public void faultButtonPressed(){
+        logger.fine(getInstanceName());
+        if (Clock.minutesBetween(lastDocked, Clock.getInstance().getDateAndTime())<=2) {
+            faultLight.flash();
+            hub.fault(this);
+        }
     }
+    
     /**
      * If occupied return True else return False.
      * 
      */
-    public boolean isOccupied(){
+    public boolean isOccupied() {
         return this.occupiedStatus;
     }
- 
+    
+    public String getStationName() {
+        return station.getInstanceName();
+    }
+    
+    public String getBikeID() {
+        return bikeID;
+    }
 
 }

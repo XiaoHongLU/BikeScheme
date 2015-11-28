@@ -243,7 +243,37 @@ public class SystemTest {
     }
 
 
+    /**
+     * Run the "Report Fault" use case.
+     * 
+     */
+    @Test
+    public void reportFault() {
+        logger.info("Starting test: reportFault");
+        
+        returnBike();
+        
+        logger.info("reportFault");
+        
+        input("2 09:01, FaultButton, A.2.fb, pressed");
+        expect("2 09:01, FaultLight, A.2.fl, flashed");
+    }
 
+    /**
+     * Run the "View Stats" use case.
+     * 
+     */
+    @Test
+    public void viewStats() {
+        logger.info("Starting test: viewStats");
+        
+        reportFault();
+        
+        input("2 18:00, HubTerminal, ht, viewStats");
+        
+        
+    }
+    
     /*
      * 
      * SUPPORT CODE FOR RUNNING TESTS

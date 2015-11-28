@@ -18,7 +18,7 @@ import java.util.ArrayList;
  * @author pbj
  *
  */
-public class Hub implements AddDStationObserver, HubInterface {
+public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver {
     public static final Logger logger = Logger.getLogger("bikescheme");
 
     private HubTerminal terminal;
@@ -50,6 +50,7 @@ public class Hub implements AddDStationObserver, HubInterface {
         // Construct and make connections with interface devices
         terminal = new HubTerminal("ht");
         terminal.setObserver(this);
+        terminal.setShowStatsObserver(this);
         display = new HubDisplay("hd");
         dockingStationMap = new HashMap<String, DStation>();
         bikeMap = new HashMap<String, Bike>();
@@ -224,6 +225,33 @@ public class Hub implements AddDStationObserver, HubInterface {
         }
         return ac;
     }
+    
+    /**
+     * 
+     */
+    public void showStatsReceived(){
+        logger.fine("");
+        
+        ArrayList<String> stat = new ArrayList<String>();
+        stat.add("Property");
+        stat.add("Value/Stat");
+        stat.add("#Journeys Today");
+        int journeyNo = 0, journeyTimeSum = 0;
+        for (User u : keyToUserMap.values()) {
+            journeyNo += u.getTrips().size();
+            for (Trip t : u.getTrips()) {
+                journeyTimeSum += t.getLength();
+            }
+        }
+        stat.add(Integer.toString(journeyNo));
+        stat.add("#Users Registered");
+        stat.add(Integer.toString(keyToUserMap.size()));
+        stat.add("Average Journey Time");
+        stat.add(Float.toString((float) journeyTimeSum/journeyNo));
+        
+        terminal.showStats(stat);
+    }
+
 
     /**
      * 

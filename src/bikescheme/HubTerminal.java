@@ -3,6 +3,9 @@
  */
 package bikescheme;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Model of a terminal with a keyboard, mouse and monitor.
@@ -28,6 +31,11 @@ public class HubTerminal extends AbstractIODevice {
         observer = o;
     }
     
+    private ShowStatsObserver showStatsObserver;
+    
+    public void setShowStatsObserver(ShowStatsObserver o) {
+        showStatsObserver = o;
+    }
 
     
     /** 
@@ -48,10 +56,14 @@ public class HubTerminal extends AbstractIODevice {
             
             addDStation(instanceName, eastPos, northPos, numPoints);
             
+        } else if (e.getMessageName().equals("viewStats") 
+                && e.getMessageArgs().size() == 0){
+            viewStats();
         } else {
             super.receiveEvent(e);
         } 
     }
+    
     /**
      * Handle request to add a new docking station
      */
@@ -66,5 +78,37 @@ public class HubTerminal extends AbstractIODevice {
         observer.addDStation(instanceName, eastPos, northPos, numPoints);
     }
     
+    /**
+     * Generates stats for 
+     * 
+     */
+    public void viewStats(){
+        logger.fine(getInstanceName());
+        
+        showStatsObserver.showStatsReceived();
+    }
+    
+    public void showStats(List<String> stats) {
+        logger.fine(getInstanceName());
+        
+        String deviceClass = "HubTerminal";
+        String deviceInstance = getInstanceName();
+        String messageName = "showStats";
+        
+        List<String> messageArgs = new ArrayList<String>();
+        String[] preludeArgs = 
+            {"unordered-tuples","2"};
+        messageArgs.addAll(Arrays.asList(preludeArgs));
+        messageArgs.addAll(stats);
+        
+        super.sendEvent(
+            new Event(
+                Clock.getInstance().getDateAndTime(), 
+                deviceClass,
+                deviceInstance,
+                messageName,
+                messageArgs));
+       
+    }
    
 }

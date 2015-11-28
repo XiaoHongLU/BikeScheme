@@ -15,7 +15,7 @@ public class FaultButton extends AbstractInputDevice{
     @Override
     public void receiveEvent(Event e) {
         
-        if (e.getMessageName().equals("dockBike") 
+        if (e.getMessageName().equals("pressed") 
                 && e.getMessageArgs().size() == 0) {
             
             faultBike();

@@ -15,7 +15,7 @@ import java.util.logging.Logger;
  * @author pbj
  *
  */
-public class DStation implements StartRegObserver {
+public class DStation implements StartRegObserver, ViewActivityObserver, FindFreePointsObserver, DStationInterface{
     public static final Logger logger = Logger.getLogger("bikescheme");
 
     private String instanceName;
@@ -27,7 +27,8 @@ public class DStation implements StartRegObserver {
     private KeyIssuer keyIssuer;
     private List<DPoint> dockingPoints;
     private KeyReader keyReader;
- 
+    
+    private HubInterface hub;
     /**
      * 
      * Construct a Docking Station object with touch screen, card reader
@@ -53,6 +54,9 @@ public class DStation implements StartRegObserver {
         
         touchScreen = new DSTouchScreen(instanceName + ".ts");
         touchScreen.setObserver(this);
+        // Set observers to recognise "view activity" and "find free points" options
+        touchScreen.setViewActivityObserver(this);
+        touchScreen.setFindFreePointsObserver(this);
         
         cardReader = new CardReader(instanceName + ".cr");
         
@@ -64,8 +68,6 @@ public class DStation implements StartRegObserver {
         
         for (int i = 1; i <= numPoints; i++) {
             DPoint dp = new DPoint(instanceName + "." + i, i - 1);
-            //added
-            dp.setDSName(getInstanceName());
             dockingPoints.add(dp);
         }
     }
@@ -89,7 +91,7 @@ public class DStation implements StartRegObserver {
     }
     
     /** 
-     * Dummy implementation of docking station functionality for 
+     * Implementation of docking station functionality for 
      * "register user" use case.
      * 
      * Method called on docking station receiving a "start registration"
@@ -99,25 +101,67 @@ public class DStation implements StartRegObserver {
      */
     public void startRegReceived(String personalInfo) {
         logger.fine("Starting on instance " + getInstanceName());
-        
         cardReader.requestCard();  // Generate output event
         logger.fine("At position 1 on instance " + getInstanceName());
         
-        cardReader.checkCard();    // Pull in non-triggering input event
+        String card = cardReader.checkCard();    // Pull in non-triggering input event
         logger.fine("At position 2 on instance " + getInstanceName());
         
-        keyIssuer.issueKey(); // Generate output event
+        String keyID = keyIssuer.issueKey(); // Generate output event
+        
+        // Create a new User class in the Hub system and links it to the key.
+        hub.newUser(personalInfo, keyID, card);
+    }
+    
+    public void setHub(HubInterface h){
+        this.hub = h;
+        for (DPoint dp : dockingPoints) {
+            dp.setInterface(this, hub);
+        }
+    }
+    
+    /**
+     * Implementation of docking station functionality for 
+     * "view activity" use case.
+     * 
+     * Method called on docking station receiving a "view activity"
+     * triggering input event at the touch screen.
+     * 
+     */
+    @Override
+    public void viewActivityReceived(){
+        logger.fine(getInstanceName());
+        
+        touchScreen.showPrompt("PLEASE INSERT YOUR KEY.");
+        String keyID = keyReader.waitForKeyInsertion();
+        
+        ArrayList<String> userInfoData;
+        
+        userInfoData = hub.userActivity(keyID);
+        
+        touchScreen.showUserActivity(userInfoData);;
         
     }
     
-    public void viewActivityReceived(String keyID){
-        logger.fine("JINHONGLU"+getInstanceName());
-        String[] userInfoArray = 
-                // "HireTime"  "HireDS" "ReturnDS" "RentTime"
-            {  "08:00",      "A",  "A",  "80"};
-
-        List<String> userInfoData = Arrays.asList(userInfoArray);
-        touchScreen.showUserActivity(userInfoData);;
+    /**
+     * Implementation of docking station functionality for 
+     * "find free points" use case.
+     * 
+     * Method called on docking station receiving a "find free points"
+     * triggering input event at the touch screen.
+     * 
+     * It asks the 
+     * 
+     */
+    @Override
+    public void findFreePointsReceived(){
+        logger.fine(getInstanceName());
+        
+        ArrayList<String> occupancyList;
+        
+        occupancyList = hub.findFreePoints(this);
+        
+        touchScreen.showFreePoints(occupancyList);
         
     }
     
@@ -146,13 +190,6 @@ public class DStation implements StartRegObserver {
         }
         
         return occupiedNumber;
-    }
-    
-    public void setPointsObserver(BikeRentObserver a, BikeReturnObserver o){
-        for (DPoint p : dockingPoints){
-            p.setRentObserver(a);
-            p.setReturnObserver(o);
-        }
     }
     
  

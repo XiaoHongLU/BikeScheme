@@ -1,20 +1,24 @@
 package bikescheme;
 
 
+import java.util.Calendar;
 import java.util.Date;
 
 public class Trip {
     private String startStation, endStation;
-    private Date start;
+    private Date start, end;
+    private int day;
     private int length;
 
-    public Trip(String station, Date start){
+    public Trip(String station){
         this.startStation = station;
-        this.start = start;
+        this.day = Clock.getInstance().getDateAndTimeAsCalendar().get(Calendar.DAY_OF_MONTH);
+        this.start = Clock.getInstance().getDateAndTime();
     }
     
-    public void endTrip(String station, Date end){
+    public void endTrip(String station){
         this.endStation = station;
+        this.end = Clock.getInstance().getDateAndTime();
         this.length = Clock.minutesBetween(start, end);
     }
 
@@ -33,13 +37,13 @@ public class Trip {
     public void setEndStation(String endStation) {
         this.endStation = endStation;
     }
-
+    
     public Date getStart() {
         return start;
     }
 
-    public void setStart(Date start) {
-        this.start = start;
+    public int getDay() {
+        return day;
     }
 
     public int getLength() {

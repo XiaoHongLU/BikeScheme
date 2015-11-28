@@ -66,11 +66,5 @@ public class HubTerminal extends AbstractIODevice {
         observer.addDStation(instanceName, eastPos, northPos, numPoints);
     }
     
-    
-    // Insert here support for operations generating output on the 
-    // touch screen display.
-    
-    
-    
    
 }

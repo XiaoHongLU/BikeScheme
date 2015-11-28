@@ -44,6 +44,11 @@ public class DSTouchScreen extends AbstractIODevice {
                 
             viewActivity();
                 
+        } else if (e.getMessageName().equals("findFreePoints") //123123123123
+                    && e.getMessageArgs().size() == 0){
+            
+            findFreePoints();
+            
         } else {
             super.receiveEvent(e);
         } 
@@ -97,6 +102,29 @@ public class DSTouchScreen extends AbstractIODevice {
         viewActivityObserver.viewActivityReceived();    
     }
     
+    /*
+     * 
+     * SUPPORT FOR findFreePoints TRIGGERING INPUT MESSAGE
+     * 
+     * 
+     */
+    private FindFreePointsObserver findFreePointsObserver;
+    
+    public void setFindFreePointsObserver(FindFreePointsObserver o) {
+        findFreePointsObserver = o;
+    }
+    
+    /**
+     * Model user selecting a "find free points" option to see free points
+     * of nearby DStations.
+     * 
+     */
+    public void findFreePoints() {
+        logger.fine(getInstanceName());
+        
+        findFreePointsObserver.findFreePointsReceived();
+    }
+    
     /* 
      * 
      * SUPPORT FOR showPrompt OUTPUT MESSAGE
@@ -132,7 +160,6 @@ public class DSTouchScreen extends AbstractIODevice {
 
     public void showUserActivity(List<String> activityData) {
         logger.fine(getInstanceName());
-        logger.fine(getInstanceName());
         
         String deviceClass = "DSTouchScreen";
         String deviceInstance = getInstanceName();
@@ -142,6 +169,36 @@ public class DSTouchScreen extends AbstractIODevice {
         String[] preludeArgs = 
             {"ordered-tuples","4",
              "HireTime","HireDS","ReturnDS","Duration (min)"};
+        messageArgs.addAll(Arrays.asList(preludeArgs));
+        messageArgs.addAll(activityData);
+        
+        super.sendEvent(
+            new Event(
+                Clock.getInstance().getDateAndTime(), 
+                deviceClass,
+                deviceInstance,
+                messageName,
+                messageArgs));
+       
+    }
+    
+    /* 
+     * 
+     * SUPPORT FOR showFreePoints OUTPUT MESSAGE
+     * 
+     */
+
+    public void showFreePoints(List<String> activityData) {
+        logger.fine(getInstanceName());
+        
+        String deviceClass = "DSTouchScreen";
+        String deviceInstance = getInstanceName();
+        String messageName = "findFreePoints";
+        
+        List<String> messageArgs = new ArrayList<String>();
+        String[] preludeArgs = 
+            {"unordered-tuples","6",
+             "DSName","East","North","Status","#Occupied","#Points"};
         messageArgs.addAll(Arrays.asList(preludeArgs));
         messageArgs.addAll(activityData);
         

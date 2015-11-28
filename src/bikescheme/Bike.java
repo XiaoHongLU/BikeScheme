@@ -3,24 +3,30 @@ package bikescheme;
 public class Bike {
     private String ID;
     private boolean rentStatus;
+    private boolean faultStatus;
 
     public Bike(String bikeID) {
         this.ID = bikeID;
         rentStatus = false;
+        faultStatus = false;
     }
 
-    public void rentBike() {
-        if (rentStatus == false)
+    public boolean rentBike() {
+        if (rentStatus == false) {
             rentStatus = true;
-        else
-            System.out.println("WE DONT HAVE THIS BIKE IN STOCK.");
+            return true;
+        } else
+            return false;
+
     }
 
-    public void returnBike() {
-        if (rentStatus == true)
+    public boolean returnBike() {
+        if (rentStatus == true) {
             rentStatus = false;
-        else
-            System.out.println("ALREADY INSTOCK.");
+            return true;
+        } else
+            return false;
+
     }
 
     public boolean isRentStatus() {
@@ -29,6 +35,14 @@ public class Bike {
 
     public void setRentStatus(boolean rentStatus) {
         this.rentStatus = rentStatus;
+    }
+    
+    public void fault() {
+        this.faultStatus = true;
+    }
+    
+    public boolean isFault() {
+        return faultStatus;
     }
 
     public String getID() {

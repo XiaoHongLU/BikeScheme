@@ -97,7 +97,7 @@ public class HubTerminal extends AbstractIODevice {
         
         List<String> messageArgs = new ArrayList<String>();
         String[] preludeArgs = 
-            {"unordered-tuples","2"};
+            {"ordered-tuples","2"};
         messageArgs.addAll(Arrays.asList(preludeArgs));
         messageArgs.addAll(stats);
         

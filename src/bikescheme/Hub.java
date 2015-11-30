@@ -4,6 +4,9 @@
 package bikescheme;
 
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +37,9 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
     private Map<String, Bike> bikeMap;
     // Create an arraylist of fault bike;
     private ArrayList<Bike> faultBikes;
+    
+    private BankServer bankServer;
+    public static Date chargeStart = new Date((24 * 60 - 1) * 60 * 1000L);
 
     /**
      * 
@@ -46,7 +52,8 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
      * @param instanceName
      */
     public Hub() {
-
+        Clock.createInstance();
+        
         // Construct and make connections with interface devices
         terminal = new HubTerminal("ht");
         terminal.setObserver(this);
@@ -57,14 +64,15 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
         bikeToKeyMap = new HashMap<String, String>();
         keyToUserMap = new HashMap<String, User>();
         faultBikes = new ArrayList<Bike>();
+        bankServer = new BankServer("bsv");
         
-        newUser("STAFF", "admin", "****");
+        // Default user, staff, who use keys identified as "admin".
+        // "****" indicates no card detail;
+        newUser("STAFF", "admin", "****"); 
 
         // Schedule timed notification for generating updates of
         // hub display.
-        // The idiom of an anonymous class is used here, to make it easy
-        // for hub code to process multiple timed notification, if needed.
-
+        // Every 5 mins it shows the occupancy on display.
         Clock.getInstance().scheduleNotification(new TimedNotificationObserver() {
 
             /**
@@ -72,22 +80,28 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
              */
             @Override
             public void processTimedNotification() {
-                logger.fine("");
+                logger.fine("Refreshing Display");
                 ArrayList<String> occupancyList = showOccupancy(0, 0);
                 display.showOccupancy(occupancyList);
             }
 
         }, Clock.getStartDate(), 0, 5);
         
+        
+        // Schedule timed notification for charging users.
+        // Every 24 hrs it charges the users.
         Clock.getInstance().scheduleNotification(new TimedNotificationObserver() {
             /**
+             * 
              * 
              */
             @Override
             public void processTimedNotification() {
                 logger.fine("Charging User");
+                
+                bankServer.chargeUsers(keyToUserMap.values(), computeDebt(keyToUserMap.values()));
             }
-        }, Clock.getStartDate(), 24, 0);
+        }, chargeStart, 24, 0);
 
     }
 
@@ -103,6 +117,7 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
     public void setCollector(EventCollector c) {
         display.setCollector(c);
         terminal.setCollector(c);
+        bankServer.setCollector(c);
     }
     
     /**
@@ -113,7 +128,7 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
     // "DSName","East","North","Status","#Occupied","#DPoints"
     for (DStation a : dockingStationMap.values()) {
         float occupancy = ((float) a.getOccupiedDPoints() / a.getNoDPoints());
-        String status = "";
+        String status = "OK";
             if (occupancy >= 0.85)
                 status = "HIGH";
             if (occupancy <= 0.15)
@@ -266,6 +281,7 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
     
     /**
      * 
+     * @param dp
      */
     public void fault(DPoint dp) {
         logger.fine("");
@@ -273,6 +289,43 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
         faultBikes.add(bikeMap.get(dp.getBikeID()));
     }
     
+    /**
+     * 
+     * @param users
+     */
+    public ArrayList<String> computeDebt(Collection<User> users) {
+        // Computing each user's debt amount.
+        ArrayList<String> debtData = new ArrayList<String>();
+        for (User user : users) {
+            int debt = 0, timeSum = 0;
+            // 123456
+            for (Trip t : user.getTrips()) {
+                int time = t.getLength();
+                timeSum += time;
+                if (time > 0) {
+                    debt += 1;
+                    if (time > 30) {
+                        if ((time - 30) % 30 > 0)
+                            debt += ((time - 30) / 30) * 2;
+                        else
+                            debt += ((time - 30) / 30) * 2;
+                    }
+                }
+            }
+            // Add to print out list
+            if (debt > 0) {
+                //"UserName", "KeyID", "#Trips", "TimeSum", "DebitAmount" 
+                String[] userDebt = 
+                         {user.getUserAccount(), 
+                          user.getKeyNumber(), 
+                          Integer.toString(user.getTrips().size()),
+                          Integer.toString(timeSum),
+                          Integer.toString(debt)};
+                debtData.addAll(Arrays.asList(userDebt));
+            }
+        }
+        return debtData;
+    }
     
     /**
      * 

@@ -112,14 +112,16 @@ public class SystemTest {
      */
 
     @Test
-    public void showHighLowOccupancy() {
-        logger.info("Starting test: showHighLowOccupancy");
+    public void viewOccupancy() {
+        logger.info("Starting test: viewOccupancy");
 
         returnBike();
         input("2 18:00, Clock, clk, tick");
+        input("2 18:01, Clock, clk, tick");
+        input("2 18:02, Clock, clk, tick");
         expect("2 18:00, HubDisplay, hd, viewOccupancy, unordered-tuples, 6,"
                 + "DSName, East, North, Status, #Occupied, #DPoints,"
-                + "     A,    0,     0,       ,         2,       10,"
+                + "     A,    0,     0,     OK,         2,       10,"
                 + "     B,  400,   300,   HIGH,         9,       10");
     }
     
@@ -167,7 +169,7 @@ public class SystemTest {
         input("3 15:00, DSTouchScreen, B.ts, findFreePoints");
         expect("3 15:00, DSTouchScreen, B.ts, findFreePoints, unordered-tuples, 6,"
                 + "DSName, East, North, Status, #Occupied, #DPoints,"
-                + "     A, -400,  -300,       ,         2,       10,"
+                + "     A, -400,  -300,     OK,         2,       10,"
                 + "     B,    0,     0,   HIGH,         9,       10");
     }
     
@@ -270,8 +272,28 @@ public class SystemTest {
         reportFault();
         
         input("2 18:00, HubTerminal, ht, viewStats");
+        expect("2 18:00, HubTerminal, ht, showStats, ordered-tuples, 2,"
+                +"Property, Value/Stat,"
+                +"#Journeys Today, 1,"
+                +"#Users Registered, 2,"
+                +"Average Journey Time, 60.0");        
         
-        
+    }
+    
+    /**
+     * Run the "Charge Users" use case.
+     * 
+     */
+    @Test
+    public void chargeUser() {
+       logger.info("Starting test: chargeUser");
+       
+       returnBike();
+       
+       input("2 23:59, Clock, clk, tick");
+       expect("2 23:59, BankServer, bsv, chargeUser, unordered-tuples, 5,"
+               +"UserName, KeyID, #Trips, TimeSum, DebitAmount,"
+               +"Alice, A.ki-1,      1,      60,           3");
     }
     
     /*

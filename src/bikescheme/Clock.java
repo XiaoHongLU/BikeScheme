@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * 
@@ -39,6 +40,7 @@ import java.util.List;
  */
 
 public class Clock extends AbstractInputDevice {
+    
  
     private class TimedNotification {
         private TimedNotificationObserver observer;
@@ -77,6 +79,8 @@ public class Clock extends AbstractInputDevice {
     private Date dateAndTime;
    
     static {  
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        
         dateFormat = new SimpleDateFormat("d HH:mm");
 
         startDate = new Date(0L); // 1 Jan 1970, 00:00
@@ -85,9 +89,6 @@ public class Clock extends AbstractInputDevice {
         cal.clear();
         cal.set(1999, 12, 31, 23, 59);
         errorDate = cal.getTime();   
-        
-         
-        instance = new Clock();
         
     }
     
@@ -185,6 +186,10 @@ public class Clock extends AbstractInputDevice {
         long minutes = 
                 (endDate.getTime() - startDate.getTime()) / (1000 * 60);
         return (int) minutes;
+    }
+    
+    public static void createInstance() {
+        instance = new Clock();        
     }
     
     /**

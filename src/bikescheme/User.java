@@ -35,15 +35,30 @@ public class User {
 		this.card = card;
 	}
 	
+	/**
+	 * The user starts a trip
+	 * 
+	 * @param station
+	 */
 	public void startTrip(String station){
 	    currentTrip = new Trip(station);
 	}
 	
+	/**
+	 * The user finished the current trip
+	 * 
+	 * @param station
+	 */
 	public void endTrip(String station){
 	    currentTrip.endTrip(station);
 	    trips.add(currentTrip);
 	}
 	
+	/**
+	 * Return this user's trips of the day
+	 * 
+	 * @return todayTrips
+	 */
 	public ArrayList<Trip> getTrips(){
 	    ArrayList<Trip> todayTrips = new ArrayList<Trip>();
 	    for (Trip t: trips) {

@@ -9,6 +9,10 @@ public class FaultLight extends AbstractOutputDevice {
         super(instanceName);
     }
 
+    /**
+     * This function models the FaultLight Flashes.
+     * 
+     */
     public void flash() {
         logger.fine(getInstanceName());
         

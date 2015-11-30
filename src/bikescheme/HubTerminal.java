@@ -66,6 +66,11 @@ public class HubTerminal extends AbstractIODevice {
     
     /**
      * Handle request to add a new docking station
+     * 
+     * @param instanceName
+     * @param eastPos
+     * @param northPos
+     * @param numPoints
      */
     public void addDStation(
             String instanceName, 
@@ -79,7 +84,7 @@ public class HubTerminal extends AbstractIODevice {
     }
     
     /**
-     * Generates stats for 
+     * Generates stats for the operator
      * 
      */
     public void viewStats(){

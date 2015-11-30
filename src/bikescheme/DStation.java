@@ -113,6 +113,10 @@ public class DStation implements StartRegObserver, ViewActivityObserver, FindFre
         hub.newUser(personalInfo, keyID, card);
     }
     
+    /**
+     * Link this station and the DPoints in the station to the parent hub.
+     *
+     */
     public void setHub(HubInterface h){
         this.hub = h;
         for (DPoint dp : dockingPoints) {
@@ -150,7 +154,8 @@ public class DStation implements StartRegObserver, ViewActivityObserver, FindFre
      * Method called on docking station receiving a "find free points"
      * triggering input event at the touch screen.
      * 
-     * It asks the 
+     * It asks the hub to return occupancy lists, and then asks the
+     * touch screen display to show the occupancy data.
      * 
      */
     @Override
@@ -177,12 +182,20 @@ public class DStation implements StartRegObserver, ViewActivityObserver, FindFre
         return northPos;
     }
     
-    //Return number of DPoints Modified
+    /**
+     * Return the number of DPoints
+     * 
+     * @return
+     */
     public int getNoDPoints(){
         return dockingPoints.size();
     }
     
-    //Return number of occupied DPoints Modified
+    /**
+     * Return number of occupied DPoints Modified
+     * 
+     * @return
+     */
     public int getOccupiedDPoints(){
         int occupiedNumber = 0;
         for (DPoint p : dockingPoints){

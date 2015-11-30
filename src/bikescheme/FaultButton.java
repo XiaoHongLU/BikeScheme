@@ -25,9 +25,12 @@ public class FaultButton extends AbstractInputDevice{
         }
     }
     
+    /**
+     * This function models the fault button being pressed.
+     * 
+     */
     public void faultBike(){
         logger.fine(getInstanceName());
-        
         observer.faultButtonPressed();
     }
 

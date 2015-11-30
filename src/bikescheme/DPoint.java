@@ -105,14 +105,16 @@ public class DPoint implements KeyInsertionObserver, BikeDockingObserver, FaultB
     }
 
     /**
-     * Hello
+     * A bike is docked.
+     * 
+     * If the hub contains this bike in system, run "return bike".
+     * 
      */
     public void bikeDocked(String bikeID) {
         logger.fine(getInstanceName());
-        if (hub.containsBike(bikeID)){
-            okLight.flash();
-            bikeLock.lock();
-        }
+  
+        okLight.flash();
+        bikeLock.lock();
         hub.bikeDocked(bikeID, this);
         this.bikeID = bikeID;
         this.occupiedStatus = true;
@@ -121,6 +123,8 @@ public class DPoint implements KeyInsertionObserver, BikeDockingObserver, FaultB
 
     
     /**
+     * A fault button is pressed, if it's pressed within 2 mins,
+     * report FAULT.
      * 
      */
     public void faultButtonPressed(){

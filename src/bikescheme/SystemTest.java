@@ -31,26 +31,12 @@ public class SystemTest {
 
     private List<Event> expectedOutputEvents;
 
-    /*
-     * 
-     * INSERT SYSTEM TESTS HERE
-     * 
-     * 
-     * 
-     */
-
-
     /**
      * 
      * Setup demonstration system configuration:
      * 
-     * Clock clk -----------------> 
-     * HubTerminal ht <-----------> Hub -------->  HubDisplay d   
-     *                               | 
-     *                               |
-     *                               |
-     *                               v 
-     * DSTouchScreen x.ts <----> CardReader x.cr <------->
+     * Clock clk -----------------> HubTerminal ht <-----------> Hub -------->
+     * HubDisplay d | | | v DSTouchScreen x.ts <----> CardReader x.cr <------->
      * DStation x -------> KeyIssuer x.ki | x in {A,B} | | v KeyReader x.k.kr
      * ---> DPoint x.k ------> OKLight x.k.ok BikeSensor x.k.bs for x.k in {A.1
      * ... A.5, B.1 ... B.3}
@@ -67,7 +53,11 @@ public class SystemTest {
         input("1 07:00, HubTerminal, ht, addDStation, A,   0,   0, 10");
         input("1 07:00, HubTerminal, ht, addDStation, B, 400, 300, 10");
     }
-    
+
+    /**
+     * This function sets up some bikes to the system.
+     * 
+     */
     public void setupBikes() {
         input("1 08:00, BikeSensor, A.2.bs, dockBike, bike-2");
         input("1 08:00, BikeSensor, A.3.bs, dockBike, bike-3");
@@ -80,7 +70,60 @@ public class SystemTest {
         input("1 08:00, BikeSensor, B.7.bs, dockBike, bike-10");
         input("1 08:00, BikeSensor, B.8.bs, dockBike, bike-11");
         input("1 08:00, BikeSensor, B.9.bs, dockBike, bike-12");
+
+        expect("1 08:00, BikeLock, A.2.bl, locked");
+        expect("1 08:00, OKLight, A.2.ok, flashed");
+        expect("1 08:00, BikeLock, A.3.bl, locked");
+        expect("1 08:00, OKLight, A.3.ok, flashed");
+        expect("1 08:00, BikeLock, B.1.bl, locked");
+        expect("1 08:00, OKLight, B.1.ok, flashed");
+        expect("1 08:00, BikeLock, B.2.bl, locked");
+        expect("1 08:00, OKLight, B.2.ok, flashed");
+        expect("1 08:00, BikeLock, B.3.bl, locked");
+        expect("1 08:00, OKLight, B.3.ok, flashed");
+        expect("1 08:00, BikeLock, B.4.bl, locked");
+        expect("1 08:00, OKLight, B.4.ok, flashed");
+        expect("1 08:00, BikeLock, B.5.bl, locked");
+        expect("1 08:00, OKLight, B.5.ok, flashed");
+        expect("1 08:00, BikeLock, B.6.bl, locked");
+        expect("1 08:00, OKLight, B.6.ok, flashed");
+        expect("1 08:00, BikeLock, B.7.bl, locked");
+        expect("1 08:00, OKLight, B.7.ok, flashed");
+        expect("1 08:00, BikeLock, B.8.bl, locked");
+        expect("1 08:00, OKLight, B.8.ok, flashed");
+        expect("1 08:00, BikeLock, B.9.bl, locked");
+        expect("1 08:00, OKLight, B.9.ok, flashed");
     }
+
+    /**
+     * Run the "Add Docking Station" use case.
+     */
+    @Test
+    public void addDStation() {
+        logger.info("Starting test: addStation");
+
+        setupSystemConfig();
+
+        input("3 07:00, HubTerminal, ht, addDStation, C,   200,   300, 10");
+        input("3 07:00, HubTerminal, ht, addDStation, D,   100,   200, 10");
+    }
+
+    /**
+     * Run the "Add Bike" use case.
+     * 
+     */
+    @Test
+    public void addBike() {
+        logger.info("Starting test: addBike");
+
+        setupSystemConfig();
+        logger.info("addBike");
+
+        input("2 09:00, BikeSensor, A.1.bs, dockBike, bike-15");
+        expect("2 09:00, BikeLock, A.1.bl, locked");
+        expect("2 09:00, OKLight, A.1.ok, flashed");
+    }
+
     /**
      * Run the "Register User" use case.
      * 
@@ -100,6 +143,58 @@ public class SystemTest {
         expect("2 08:00, CardReader, A.cr, enterCardAndPin");
         input("2 08:01, CardReader, A.cr, checkCard, Alice-card-auth");
         expect("2 08:01, KeyIssuer, A.ki, keyIssued, A.ki-1");
+
+    }
+
+    /**
+     * Run the "Hire Bike" use case.
+     * 
+     */
+    @Test
+    public void hireBike() {
+        logger.info("Starting test: hireBike");
+
+        registerUser();
+        setupBikes();
+
+        input("2 08:00, KeyReader, A.2.kr, insertKey, A.ki-1");
+        expect("2 08:00, BikeLock, A.2.bl, unlocked");
+        expect("2 08:00, OKLight, A.2.ok, flashed");
+    }
+
+    /**
+     * Run the "Return Bike" use case.
+     * 
+     */
+    @Test
+    public void returnBike() {
+        logger.info("Starting test: returnBike");
+
+        hireBike();
+
+        input("2 09:00, BikeSensor, A.2.bs, dockBike, bike-2");
+        expect("2 09:00, OKLight, A.2.ok, flashed");
+        expect("2 09:00, BikeLock, A.2.bl, locked");
+
+    }
+
+    /**
+     * Run the "View User Activity" use case.
+     * 
+     */
+    @Test
+    public void viewUserActivity() {
+        logger.info("Starting test: viewUserActivity");
+
+        returnBike();
+
+        logger.info("viewUserActivity");
+
+        input("2 18:00, DSTouchScreen, A.ts, viewActivity");
+        expect("2 18:00, DSTouchScreen, A.ts, viewPrompt, PLEASE INSERT YOUR KEY.");
+        input("2 18:01, KeyReader, A.kr, keyInsertion, A.ki-1");
+        expect("2 18:01, DSTouchScreen, A.ts, viewUserActivity, ordered-tuples, 4,"
+                + "HireTime, HireDS, ReturnDS,  Duration (min)," + "   08:00,      A,        A,           60");
 
     }
 
@@ -124,36 +219,7 @@ public class SystemTest {
                 + "     A,    0,     0,     OK,         2,       10,"
                 + "     B,  400,   300,   HIGH,         9,       10");
     }
-    
-    /**
-     * Run the "Add Docking Station" use case.
-     */
-    @Test
-    public void addDStation() {
-        logger.info("Starting test: addStation");
-        
-        
-        setupSystemConfig();
-        
-        input("3 07:00, HubTerminal, ht, addDStation, C,   200,   300, 10");
-        input("3 07:00, HubTerminal, ht, addDStation, D,   100,   200, 10");
-    }
-    
 
-    /**
-     * Run the "Add Bike" use case.
-     * 
-     */
-    @Test
-    public void addBike() {
-        logger.info("Starting test: addBike");
-        
-        setupSystemConfig();
-        logger.info("addBike");
-        
-        input("2 09:00, BikeSensor, A.1.bs, dockBike, bike-15");
-    }
-    
     /**
      * Run the "Find Free Points" use case.
      * 
@@ -161,18 +227,18 @@ public class SystemTest {
     @Test
     public void findFreePoints() {
         logger.info("Starting test: findFreePoints");
-        
+
         setupSystemConfig();
         setupBikes();
         logger.info("findFreePoints");
-        
+
         input("3 15:00, DSTouchScreen, B.ts, findFreePoints");
         expect("3 15:00, DSTouchScreen, B.ts, findFreePoints, unordered-tuples, 6,"
                 + "DSName, East, North, Status, #Occupied, #DPoints,"
                 + "     A, -400,  -300,     OK,         2,       10,"
                 + "     B,    0,     0,   HIGH,         9,       10");
     }
-    
+
     /**
      * Run the "Remove bike" use case.
      * 
@@ -180,70 +246,15 @@ public class SystemTest {
     @Test
     public void removeBike() {
         logger.info("Starting test: removeBike");
-        
+
         setupSystemConfig();
         setupBikes();
         logger.info("removeBikes");
-        
+
         input("3 15:00, KeyReader, A.3.kr, insertKey, admin");
         expect("3 15:00, BikeLock, A.3.bl, unlocked");
         expect("3 15:00, OKLight, A.3.ok, flashed");
     }
-    
-    /**
-     * Run the "Hire Bike" use case.
-     * 
-     */
-    @Test
-    public void hireBike() {
-        logger.info("Starting test: hireBike");
-
-        registerUser();
-        setupBikes();
-        
-        input("2 08:00, KeyReader, A.2.kr, insertKey, A.ki-1");
-        expect("2 08:00, BikeLock, A.2.bl, unlocked");
-        expect("2 08:00, OKLight, A.2.ok, flashed");
-    }
-
-    /**
-     * Run the "Return Bike" use case.
-     * 
-     */
-    @Test
-    public void returnBike() {
-        logger.info("Starting test: returnBike");
-        
-        hireBike();
-        
-        input("2 09:00, BikeSensor, A.2.bs, dockBike, bike-2");
-        expect("2 09:00, OKLight, A.2.ok, flashed");
-        expect("2 09:00, BikeLock, A.2.bl, locked");
-  
-    }
-
-
-    /**
-     * Run the "View User Activity" use case.
-     * 
-     */
-    @Test
-    public void viewUserActivity() {
-        logger.info("Starting test: viewUserActivity");
-        
-        returnBike();
-        
-        logger.info("viewUserActivity");
-        
-        input("2 18:00, DSTouchScreen, A.ts, viewActivity");
-        expect("2 18:00, DSTouchScreen, A.ts, viewPrompt, PLEASE INSERT YOUR KEY.");
-        input("2 18:01, KeyReader, A.kr, keyInsertion, A.ki-1");
-        expect("2 18:01, DSTouchScreen, A.ts, viewUserActivity, ordered-tuples, 4,"
-                + "HireTime, HireDS, ReturnDS,  Duration (min),"
-                + "   08:00,      A,        A,           60" );
-       
-    }
-
 
     /**
      * Run the "Report Fault" use case.
@@ -252,13 +263,28 @@ public class SystemTest {
     @Test
     public void reportFault() {
         logger.info("Starting test: reportFault");
-        
+
         returnBike();
-        
+
         logger.info("reportFault");
-        
+
         input("2 09:01, FaultButton, A.2.fb, pressed");
         expect("2 09:01, FaultLight, A.2.fl, flashed");
+    }
+
+    /**
+     * Run the "Charge Users" use case.
+     * 
+     */
+    @Test
+    public void chargeUser() {
+        logger.info("Starting test: chargeUser");
+
+        returnBike();
+
+        input("2 23:59, Clock, clk, tick");
+        expect("2 23:59, BankServer, bsv, chargeUser, unordered-tuples, 5,"
+                + "UserName, KeyID, #Trips, TimeSum, DebitAmount," + "Alice, A.ki-1,      1,      60,           3");
     }
 
     /**
@@ -268,34 +294,14 @@ public class SystemTest {
     @Test
     public void viewStats() {
         logger.info("Starting test: viewStats");
-        
+
         reportFault();
-        
+
         input("2 18:00, HubTerminal, ht, viewStats");
-        expect("2 18:00, HubTerminal, ht, showStats, ordered-tuples, 2,"
-                +"Property, Value/Stat,"
-                +"#Journeys Today, 1,"
-                +"#Users Registered, 2,"
-                +"Average Journey Time, 60.0");        
-        
+        expect("2 18:00, HubTerminal, ht, showStats, ordered-tuples, 2," + "Property, Value/Stat,"
+                + "#Journeys Today, 1," + "#Users Registered, 1," + "Average Journey Time, 60.0");
+
     }
-    
-    /**
-     * Run the "Charge Users" use case.
-     * 
-     */
-    @Test
-    public void chargeUser() {
-       logger.info("Starting test: chargeUser");
-       
-       returnBike();
-       
-       input("2 23:59, Clock, clk, tick");
-       expect("2 23:59, BankServer, bsv, chargeUser, unordered-tuples, 5,"
-               +"UserName, KeyID, #Trips, TimeSum, DebitAmount,"
-               +"Alice, A.ki-1,      1,      60,           3");
-    }
-    
     /*
      * 
      * SUPPORT CODE FOR RUNNING TESTS

@@ -18,7 +18,7 @@ import java.util.ArrayList;
  * Hub system.
  *
  * 
- * @author pbj
+ * @author pbj 
  *
  */
 public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver {
@@ -37,7 +37,7 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
     private Map<String, Bike> bikeMap;
     // Create an arraylist of fault bike;
     private ArrayList<Bike> faultBikes;
-    
+    // Create a bank server and set a date to start charging from 23:59 1 Jan 1970.
     private BankServer bankServer;
     public static Date chargeStart = new Date((24 * 60 - 1) * 60 * 1000L);
 
@@ -121,6 +121,9 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
     }
     
     /**
+     * Show the occupancy on the large display in Hub.
+     * 
+     * This function generates the output data needed for the HubDisplay.
      * 
      */
     public ArrayList<String> showOccupancy(int east, int north){
@@ -129,22 +132,24 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
     for (DStation a : dockingStationMap.values()) {
         float occupancy = ((float) a.getOccupiedDPoints() / a.getNoDPoints());
         String status = "OK";
-            if (occupancy >= 0.85)
-                status = "HIGH";
-            if (occupancy <= 0.15)
-                status = "LOW";
-            occupancyList.add(a.getInstanceName());
-            occupancyList.add(Integer.toString(a.getEastPos()-east));
-            occupancyList.add(Integer.toString(a.getNorthPos()-north));
-            occupancyList.add(status);
-            occupancyList.add(Integer.toString(a.getOccupiedDPoints()));
-            occupancyList.add(Integer.toString(a.getNoDPoints()));
+        if (occupancy >= 0.85)
+            status = "HIGH";
+        if (occupancy <= 0.15)
+            status = "LOW";
+        occupancyList.add(a.getInstanceName());
+        occupancyList.add(Integer.toString(a.getEastPos()-east));
+        occupancyList.add(Integer.toString(a.getNorthPos()-north));
+        occupancyList.add(status);
+        occupancyList.add(Integer.toString(a.getOccupiedDPoints()));
+        occupancyList.add(Integer.toString(a.getNoDPoints()));
     }
     return occupancyList;
     }
     
     /**
+     * Find the freepoints of DStations near a given position.
      * 
+     * The position is set by its eastPos and northPos.
      * 
      */
     @Override
@@ -154,6 +159,8 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
     }
     
     /**
+     * This function adds a new DStation to the system and maps its
+     * instanceName to it for convenience.
      * 
      */
     @Override
@@ -177,28 +184,32 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
     }
 
     /**
-     * 123456789
+     * This function supports both "hire bike" and "remove bike" use cases.
+     * 
+     * It simulates a bike being taken out by a key.
      * 
      * @param bikeID
      */
     @Override
     public void bikeTakeOut(String keyID, String bikeID, DPoint d) {
         logger.fine("");
-        if (this.keyToUserMap.containsKey(keyID)){
+        if (keyID == "admin"){
+            logger.fine(bikeID + " is removed.");
+            bikeMap.remove(bikeID);
+        } else if (this.keyToUserMap.containsKey(keyID)) {
             bikeToKeyMap.put(bikeID, keyID);
             logger.fine(bikeID + " is linked to " + bikeToKeyMap.get(bikeID));
             bikeMap.get(bikeID).rentBike();
             keyToUserMap.get(keyID).startTrip(d.getStationName());
-        } else if (keyID == "admin") {
-            logger.fine(bikeID + " is removed.");
-            bikeMap.remove(bikeID);
         } else {
             logger.warning(keyID + " Is Not A Valid Key!");
         }
     }
 
     /**
-     * §1234567890
+     * This function supports both "hire bike" and "remove bike" use cases.
+     * 
+     * 
      */
     public void bikeDocked(String bikeID, DPoint d) {
         logger.fine("");
@@ -214,7 +225,8 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
     }
 
     /**
-     * §1234567890
+     * This adds a new user to the system.
+     * 
      */
     public void newUser(String info, String keyID, String card) {
         User u = new User(info, keyID, card);
@@ -223,9 +235,9 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
     }
 
     /**
-     * 123
+     * This function generates user activity for a user with keyID
      * 
-     * @param instanceName
+     * @param keyID
      * @return
      */
     public ArrayList<String> userActivity(String keyID) {
@@ -260,7 +272,7 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
         }
         stat.add(Integer.toString(journeyNo));
         stat.add("#Users Registered");
-        stat.add(Integer.toString(keyToUserMap.size()));
+        stat.add(Integer.toString(keyToUserMap.size()-1)); // User size -1 (the admin).
         stat.add("Average Journey Time");
         stat.add(Float.toString((float) journeyTimeSum/journeyNo));
         
@@ -290,6 +302,7 @@ public class Hub implements AddDStationObserver, HubInterface, ShowStatsObserver
     }
     
     /**
+     * This function computes the debts of all provided users.
      * 
      * @param users
      */

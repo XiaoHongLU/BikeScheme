@@ -44,7 +44,7 @@ public class DSTouchScreen extends AbstractIODevice {
                 
             viewActivity();
                 
-        } else if (e.getMessageName().equals("findFreePoints") //123123123123
+        } else if (e.getMessageName().equals("findFreePoints") 
                     && e.getMessageArgs().size() == 0){
             
             findFreePoints();
@@ -198,7 +198,7 @@ public class DSTouchScreen extends AbstractIODevice {
         List<String> messageArgs = new ArrayList<String>();
         String[] preludeArgs = 
             {"unordered-tuples","6",
-             "DSName","East","North","Status","#Occupied","#Points"};
+             "DSName","East","North","Status","#Occupied","#DPoints"};
         messageArgs.addAll(Arrays.asList(preludeArgs));
         messageArgs.addAll(activityData);
         

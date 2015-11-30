@@ -273,7 +273,15 @@ public class Event {
                     List<List<String> > tuples = new ArrayList<List <String> >();
                     List<List<String> > eTuples = new ArrayList<List <String> >();
 
-                    // Check header tuples for equality
+                    // Check leading arguments (first two args and header tuple 
+                    // of each arg list) for equality.
+
+                    List<String> leadingArgs = messageArgs.subList(0, 2 + tupleSize);
+                    List<String> eLeadingArgs = e.messageArgs.subList(0, 2 + tupleSize);
+                    if (! leadingArgs.equals(eLeadingArgs) ){
+                        return false;
+                    }
+
 
                     for (int i = 2 + tupleSize; i < messageArgs.size(); i = i + tupleSize) {
 
